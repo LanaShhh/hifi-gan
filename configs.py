@@ -28,8 +28,9 @@ class TrainConfig:
     dataset_archive_path = 'https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2'
     dataset_archive_save_path = './data/LJSpeech-1.1.tar.bz2'
 
-    train_audio_path = "./train_audio"
+    test_audio_path = "./test_audios"
     inf_audio_path = "./results"
+    checkpoint_audio_path = "./checkpoints_audios"
 
     wandb_project = 'hifigan_sdzhumlyakova_implementation'
 
@@ -70,8 +71,8 @@ class TrainConfig:
 
     # for training
     # text logged audios
-    logging_text = ("The quality of a speech synthesizer is judged by its similarity "
-                    "to the human voice and by its ability to be understood clearly")
+    logging_text = ("A defibrillator is a device that gives a high energy electric shock to the heart of someone "
+                    "who is in cardiac arrest")
 
 
 train_config = TrainConfig()

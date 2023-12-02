@@ -1,5 +1,8 @@
 import itertools
+import os
 
+import numpy as np
+import torchaudio
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -13,7 +16,6 @@ from model.MultiPeriodDiscriminator import MultiPeriodDiscriminator as MPD
 from model.MultiScaleDiscriminator import MultiScaleDiscriminator as MSD
 from utils import save_checkpoint
 from wandb_writer import WanDBWriter
-import numpy as np
 
 torch.cuda.manual_seed(train_config.seed)
 torch.manual_seed(train_config.seed)
@@ -85,6 +87,7 @@ cur_step = len(train_dataset) * (train_config.last_epoch + 1)
 logger = WanDBWriter(train_config)
 tqdm_bar = tqdm(total=(train_config.epochs - train_config.last_epoch - 1) * len(dataloader))
 
+test_audios = {}
 for epoch in range(train_config.last_epoch + 1, train_config.epochs):
     for idx, batch in enumerate(dataloader):
         cur_step += 1
@@ -114,7 +117,7 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
 
         logger.add_scalar('mpd_loss', loss_mpd)
         logger.add_scalar('msd_loss', loss_msd)
-        logger.add_scalar('sum_disc_loss', loss_all)
+        logger.add_scalar('discriminator_loss', loss_all)
 
         g_optimizer.zero_grad()
 
@@ -131,33 +134,45 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
         loss_all.backward()
         g_optimizer.step()
 
-        logger.add_scalar('mpd_feat_loss', feature_loss_mpd)
+        logger.add_scalar('mpd_feature_loss', feature_loss_mpd)
         logger.add_scalar('mpd_gen_loss', loss_pgen)
         logger.add_scalar('msd_feat_loss', feature_loss_msd)
         logger.add_scalar('msd_gen_loss', loss_sgen)
         logger.add_scalar('mel_loss', loss_mel)
-        logger.add_scalar('gen_total_loss', loss_all)
+        logger.add_scalar('generator_loss', loss_all)
 
         if cur_step > 0 and cur_step % train_config.save_step == 0:
             logger.set_step(cur_step, 'test')
             generator.eval()
+            mpd.eval()
+            msd.eval()
 
             with torch.no_grad():
                 err = 0
                 for i, wav in enumerate(test_dataset):
                     wav = wav.unsqueeze(0).to(device)
-                    mel = melspec(wav)
+                    mel = melspec(wav).to(device)
 
                     fake_wav = generator(mel)
                     fake_mel = melspec(fake_wav)
 
-                    logger.add_audio(f'genarated_epoch={i}', fake_wav, melspec_config.sr)
-
                     err += F.l1_loss(mel, fake_mel).item()
 
-                logger.add_scalar('melspec_error', err)
+            if not os.path.exists(train_config.test_audio_path):
+                os.makedirs(train_config.test_audio_path, exist_ok=True)
 
-                save_checkpoint(f"{train_config.checkpoint_path}/checkpoint_{cur_step}")
+            wav = torchaudio.load(os.path.join(train_config.test_audio_path, f"audio_1.wav"))[0][0]
+            mel = melspec(wav).to(device)
+            fake_wav = generator(mel)
+            fake_mel = melspec(fake_wav)
+            test_audios[len(test_audios.keys())] = {"cur_step": cur_step,
+                                                    "real_wav": wav, "generated_wav": fake_wav,
+                                                    "real_mel": mel, "generated_mel": fake_mel}
+
+            logger.add_table(test_audios)
+            logger.add_scalar('melspec_error', err)
+
+            save_checkpoint(f"{train_config.checkpoint_path}/checkpoint_{cur_step}")
 
     g_scheduler.step()
     d_scheduler.step()
