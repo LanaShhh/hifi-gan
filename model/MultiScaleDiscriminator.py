@@ -1,3 +1,5 @@
+# based on https://github.com/jik876/hifi-gan
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -54,23 +56,23 @@ class MultiScaleDiscriminator(nn.Module):
             nn.AvgPool1d(4, 2, padding=2)
         ])
 
-    def forward(self, y_true, y_pred):
-        out_true, features_true = [], []
-        out_pred, features_pred = [], []
+    def forward(self, y_real, y_fake):
+        out_real, features_real = [], []
+        out_fake, features_fake = [], []
 
         for i in range(len(self.scale_discriminators)):
             discriminator = self.scale_discriminators[i]
             if i != 0:
-                y_true = self.avg_pools[i - 1](y_true)
-                y_pred = self.avg_pools[i - 1](y_pred)
+                y_real = self.avg_pools[i - 1](y_real)
+                y_fake = self.avg_pools[i - 1](y_fake)
 
-            res_true = discriminator(y_true)
-            res_pred = discriminator(y_pred)
+            res_real = discriminator(y_real)
+            res_fake = discriminator(y_fake)
 
-            out_true.append(res_true[0])
-            features_true.append(res_true[1])
+            out_real.append(res_real[0])
+            features_real.append(res_real[1])
 
-            out_pred.append(res_pred[0])
-            features_pred.append(res_pred[1])
+            out_fake.append(res_fake[0])
+            features_fake.append(res_fake[1])
 
-        return out_true, out_pred, features_true, features_pred
+        return out_real, out_fake, features_real, features_fake

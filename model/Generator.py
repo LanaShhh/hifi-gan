@@ -1,3 +1,5 @@
+# based on https://github.com/jik876/hifi-gan
+
 import torch
 import torch.nn.functional as F
 from torch import nn

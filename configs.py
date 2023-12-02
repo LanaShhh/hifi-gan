@@ -17,11 +17,6 @@ class MelSpectrogramConfig:
     pad_value: float = -11.5129251
 
 
-
-@dataclass
-class HiFiGANConfig:
-    pass
-
 @dataclass
 class TrainConfig:
     checkpoint_path = "./checkpoints"
@@ -40,6 +35,9 @@ class TrainConfig:
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    last_epoch = -1
+    save_step = 10
+
     # from original model config
     crop_len = 8192
     batch_size = 16
@@ -52,6 +50,12 @@ class TrainConfig:
     upsample_kernel_sizes = [16, 16, 4, 4]
     upsample_initial_channel = 512
     resblock_kernel_sizes = [3, 7, 11]
+
+    learning_rate = 0.0002
+    adam_b1 = 0.8
+    adam_b2 = 0.99
+    lr_decay = 0.999
+    seed = 1234
 
     # for inference
     # texts to generate
@@ -69,5 +73,5 @@ class TrainConfig:
                     "to the human voice and by its ability to be understood clearly")
 
 
-model_config = HiFiGANConfig()
 train_config = TrainConfig()
+melspec_config = MelSpectrogramConfig()

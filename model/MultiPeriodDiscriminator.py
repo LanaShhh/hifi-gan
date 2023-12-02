@@ -1,3 +1,5 @@
+# based on https://github.com/jik876/hifi-gan
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -58,18 +60,18 @@ class MultiPeriodDiscriminator(nn.Module):
             PeriodDiscriminator(train_config, 11)
         ])
 
-    def forward(self, y_true, y_pred):
-        out_true, features_true = [], []
-        out_pred, features_pred = [], []
+    def forward(self, y_real, y_fake):
+        out_real, features_real = [], []
+        out_fake, features_fake = [], []
 
         for discriminator in self.period_discriminators:
-            res_true = discriminator(y_true)
-            res_pred = discriminator(y_pred)
+            res_real = discriminator(y_real)
+            res_fake = discriminator(y_fake)
 
-            out_true.append(res_true[0])
-            features_true.append(res_true[1])
+            out_real.append(res_real[0])
+            features_real.append(res_real[1])
 
-            out_pred.append(res_pred[0])
-            features_pred.append(res_pred[1])
+            out_fake.append(res_fake[0])
+            features_fake.append(res_fake[1])
 
-        return out_true, out_pred, features_true, features_pred
+        return out_real, out_fake, features_real, features_fake
