@@ -14,20 +14,17 @@ def count_feature_loss(features_real, features_fake, alpha=2):
 
 def count_discriminator_loss(d_out_real, d_out_fake):
     loss = 0
-    real_losses = []
-    fake_losses = []
     for d_real, d_fake in zip(d_out_real, d_out_fake):
-        real_losses.append(F.mse_loss(d_real, torch.full(d_real.size(), 1)).item())
-        fake_losses.append(torch.mean(d_fake ** 2).item())
-        loss += real_losses[-1] + fake_losses[-1]
+        real_loss = F.mse_loss(d_real.float(), torch.ones_like(d_real).float())
+        fake_loss = F.mse_loss(d_fake.float(), torch.zeros_like(d_fake).float())
+        loss += real_loss + fake_loss
 
-    return loss, real_losses, fake_losses
+    return loss
 
 
 def count_generator_loss(d_out):
     loss = 0
-    fake_losses = []
     for d in d_out:
-        fake_losses.append(F.mse_loss(d, torch.full(d.size(), 1)).item())
-        loss += fake_losses[-1]
-    return loss, fake_losses
+        fake_loss = F.mse_loss(d.float(), torch.ones_like(d).float())
+        loss += fake_loss
+    return loss

@@ -26,6 +26,6 @@ class ModelDataset(Dataset):
             if wav.size(-1) < self.crop_len:
                 wav = F.pad(wav, (0, self.crop_len - wav.size(-1)))
             else:
-                start_id = torch.randint(0, wav.size(-1) - self.crop_len)
+                start_id = torch.randint(0, wav.size(-1) - self.crop_len + 1, (1, )).item()
                 wav = wav[start_id:start_id + self.crop_len]
         return wav

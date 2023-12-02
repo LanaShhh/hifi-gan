@@ -15,14 +15,14 @@ class ResBlock(nn.Module):
         self.convs = nn.ModuleList([])
         self.relu_ratio = train_config.relu
 
-        for stride, dilation in train_config.D_r:
+        for d1, d2 in train_config.D_r:
             new_convs = nn.ModuleList([
                 weight_norm(nn.Conv1d(in_channels, in_channels, kernel_size,
-                                      stride=stride, dilation=dilation,
-                                      padding=int((kernel_size * dilation - dilation) / 2))),
+                                      dilation=d1,
+                                      padding=(kernel_size * d1 - d1) // 2)),
                 weight_norm(nn.Conv1d(in_channels, in_channels, kernel_size,
-                                      stride=stride, dilation=dilation,
-                                      padding=int((kernel_size * dilation - dilation) / 2)))
+                                      dilation=d2,
+                                      padding=(kernel_size * d2 - d2) // 2))
             ])
             new_convs[0].weight.data.normal_(0, 0.01)
             new_convs[1].weight.data.normal_(0, 0.01)
@@ -77,7 +77,7 @@ class Generator(nn.Module):
         self.pre_conv.weight.data.normal_(0, 0.01)
 
         self.blocks = nn.ModuleList([])
-        for i in range(len(train_config.resblock_kernel_sizes)):
+        for i in range(len(train_config.upsample_kernel_sizes)):
             new_block = nn.ModuleList([])
             new_block.append(weight_norm(
                 nn.ConvTranspose1d(train_config.upsample_initial_channel // (2 ** i),
@@ -93,7 +93,7 @@ class Generator(nn.Module):
             self.blocks.append(new_block)
 
         self.post_conv = weight_norm(nn.Conv1d(
-            train_config.upsample_initial_channel // (2 ** len(train_config.resblock_kernel_sizes)),
+            train_config.upsample_initial_channel // (2 ** len(train_config.upsample_kernel_sizes)),
             1, 7, padding=3
         ))
         self.post_conv.weight.data.normal_(0, 0.01)
@@ -108,9 +108,9 @@ class Generator(nn.Module):
 
         out = F.leaky_relu(out, self.relu_coef)
         out = self.post_conv(out)
-        out = torch.tahn(out)
+        out = torch.tanh(out)
 
-        return out
+        return out.squeeze(dim=1)
 
     def remove_weight_norm(self):
         for i in range(len(self.blocks)):

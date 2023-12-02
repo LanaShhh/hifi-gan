@@ -37,6 +37,7 @@ class TrainConfig:
 
     last_epoch = -1
     save_step = 10
+    epochs = 30
 
     # from original model config
     crop_len = 8192

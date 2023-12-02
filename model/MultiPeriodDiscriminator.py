@@ -32,11 +32,11 @@ class PeriodDiscriminator(nn.Module):
 
     def forward(self, x):
         features = []
-        batch, signal, time = x.shape
+        batch, time = x.shape
         if time % self.period != 0:
             x = F.pad(x, (0, self.period - (time % self.period)), "reflect")
             time += self.period - (time % self.period)
-        out = x.view(batch, signal, time // self.period, self.period)
+        out = x.view(batch, 1, time // self.period, self.period)
 
         for conv in self.convs:
             out = conv(out)

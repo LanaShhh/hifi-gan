@@ -23,12 +23,12 @@ class ScaleDiscriminator(nn.Module):
             norm(nn.Conv1d(1024, 1024, 5, 1, padding=2))
         ])
 
-        self.post_conv = weight_norm(nn.Conv2d(1024, 1, (3, 1), 1,
-                                               padding=(1, 0)))
+        self.post_conv = weight_norm(nn.Conv1d(1024, 1, 3, 1,
+                                               padding=1))
 
     def forward(self, x):
         features = []
-        out = x
+        out = x.unsqueeze(dim=1)
 
         for conv in self.convs:
             out = conv(out)

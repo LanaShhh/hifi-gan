@@ -33,9 +33,9 @@ dataloader = DataLoader(
 
 device = train_config.device
 
-generator = Generator.to(device)
-msd = MSD.to(device)
-mpd = MPD.to(device)
+generator = Generator(train_config).to(device)
+msd = MSD(train_config).to(device)
+mpd = MPD(train_config).to(device)
 
 g_optimizer = torch.optim.AdamW(
     [
@@ -82,7 +82,7 @@ cur_step = len(train_dataset) * (train_config.last_epoch + 1)
 logger = WanDBWriter(train_config)
 tqdm_bar = tqdm(total=(train_config.epochs - train_config.last_epoch - 1) * len(dataloader))
 
-for epoch in range(train_config.last_epoch + 1, train_config.epoch):
+for epoch in range(train_config.last_epoch + 1, train_config.epochs):
     for idx, batch in enumerate(dataloader):
         cur_step += 1
         tqdm_bar.update(1)
@@ -114,6 +114,7 @@ for epoch in range(train_config.last_epoch + 1, train_config.epoch):
         logger.add_scalar('sum_disc_loss', loss_all)
 
         g_optimizer.zero_grad()
+
         _, fake_res, features_real, features_fake = mpd(wav, fake_wav)
         feature_loss_mpd = count_feature_loss(features_real, features_fake)
         loss_pgen = count_generator_loss(fake_res)
@@ -123,7 +124,7 @@ for epoch in range(train_config.last_epoch + 1, train_config.epoch):
         loss_sgen = count_generator_loss(fake_res)
 
         loss_mel = F.l1_loss(mel, fake_mel) * 45
-        loss_all = loss_pgen + loss_mpd + loss_sgen + loss_msd + loss_mel
+        loss_all = loss_pgen + feature_loss_mpd + loss_sgen + feature_loss_msd + loss_mel
         loss_all.backward()
         g_optimizer.step()
 
