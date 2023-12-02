@@ -44,15 +44,13 @@ class TrainConfig:
     crop_len = 8192
     batch_size = 16
 
-    h_u = 512
-    k_u = [16, 16, 4, 4]
     D_r = [[1, 1], [3, 1], [5, 1]]
 
     relu = 0.1
 
-    upsample_rates = [8, 8, 2, 2],
-    upsample_kernel_sizes = [16, 16, 4, 4],
-    upsample_initial_channel = 512,
+    upsample_rates = [8, 8, 2, 2]
+    upsample_kernel_sizes = [16, 16, 4, 4]
+    upsample_initial_channel = 512
     resblock_kernel_sizes = [3, 7, 11]
 
     # for inference
