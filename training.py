@@ -13,10 +13,13 @@ from model.MultiPeriodDiscriminator import MultiPeriodDiscriminator as MPD
 from model.MultiScaleDiscriminator import MultiScaleDiscriminator as MSD
 from utils import save_checkpoint
 from wandb_writer import WanDBWriter
+import numpy as np
 
-torch.backends.cudnn.deterministic = True
-torch.manual_seed(train_config.seed)
 torch.cuda.manual_seed(train_config.seed)
+torch.manual_seed(train_config.seed)
+np.random.seed(train_config.seed)
+torch.backends.cudnn.deterministic = False
+torch.backends.cudnn.benchmark = True
 
 download_archive()
 
