@@ -16,6 +16,7 @@ mv hifi-gan/* .
 - Скачиваем все необходимые библиотеки
 
 ~~~
+sudo apt install libcairo2-dev
 pip install -r requirements.txt
 ~~~
 
@@ -49,9 +50,9 @@ python3 inference.py ./checkpoints/checkpoint.pth.tar
 
 ## Отчет 
 
-Отчет в wandb, с описанием работы, графиками функций ошибок, выводами и сгенерированными аудио во время обучения - TBD ссылка
+Отчет в wandb, с описанием работы, графиками функций ошибок, выводами и сгенерированными аудио во время обучения - https://wandb.ai/lana-shhh/hifigan_sdzhumlyakova_implementation/reports/HiFi-GAN-implementation---Vmlldzo2MTUzMDQ4
 
-Ссылка на итоговый run в wandb - TBD ссылка
+Ссылка на итоговый run в wandb - https://wandb.ai/lana-shhh/hifigan_sdzhumlyakova_implementation/runs/sl0msr1z?workspace=user-lana-shhh
 
 
 ## Итоговая генерация
