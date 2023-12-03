@@ -175,7 +175,7 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
                 fake_wav.cpu(), melspec_config.sr
             )
             wav = logger.wandb.Audio(os.path.join(train_config.test_audio_path, f"audio_1.wav"), sample_rate=melspec_config.sr)
-            fake_wav = logger.wandb.Audio(f"{train_config.checkpoint_audio_path}/audio_step_{cur_step}.wav", sample_rate=melspec_config.sr)
+            fake_wav = logger.wandb.Audio(f"{train_config.checkpoint_audio_path}/audio.wav", sample_rate=melspec_config.sr)
             test_audios_dir[new_id] = {"cur_step": cur_step, "real_wav": wav,
                                        "generated_wav": fake_wav}
             logger.add_table(test_audios_dir)
