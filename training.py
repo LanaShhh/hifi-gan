@@ -1,8 +1,10 @@
+import argparse
 import itertools
 import os
 
 import numpy as np
 import torchaudio
+import wandb
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -14,8 +16,16 @@ from loss import *
 from model.Generator import Generator
 from model.MultiPeriodDiscriminator import MultiPeriodDiscriminator as MPD
 from model.MultiScaleDiscriminator import MultiScaleDiscriminator as MSD
-from utils import save_checkpoint
 from wandb_writer import WanDBWriter
+
+parser = argparse.ArgumentParser(prog="Hifi-GAN training")
+
+parser.add_argument('wandb_key', type=str,
+                    help='Wandb key for logging')
+
+args = parser.parse_args()
+
+wandb.login("never", args.wandb_key)
 
 torch.cuda.manual_seed(train_config.seed)
 torch.manual_seed(train_config.seed)
@@ -76,18 +86,11 @@ d_scheduler = torch.optim.lr_scheduler.ExponentialLR(
 
 melspec = MelSpectrogram(melspec_config).to(device)
 
-# TODO checkpoint
-# TODO wandb
-
-# TODO make folders
-
-# TODO wandb logging through args
-
 cur_step = len(train_dataset) * (train_config.last_epoch + 1)
 logger = WanDBWriter(train_config)
 tqdm_bar = tqdm(total=(train_config.epochs - train_config.last_epoch - 1) * len(dataloader))
 
-test_audios = {}
+test_audios_dir = {}
 for epoch in range(train_config.last_epoch + 1, train_config.epochs):
     for idx, batch in enumerate(dataloader):
         cur_step += 1
@@ -150,29 +153,48 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
             with torch.no_grad():
                 err = 0
                 for i, wav in enumerate(test_dataset):
+                    if i >= 500:
+                        break
                     wav = wav.unsqueeze(0).to(device)
-                    mel = melspec(wav).to(device)
+                    mel = melspec(wav)
 
                     fake_wav = generator(mel)
                     fake_mel = melspec(fake_wav)
 
                     err += F.l1_loss(mel, fake_mel).item()
 
-            if not os.path.exists(train_config.test_audio_path):
-                os.makedirs(train_config.test_audio_path, exist_ok=True)
+            if not os.path.exists(train_config.checkpoint_audio_path):
+                os.makedirs(train_config.checkpoint_audio_path, exist_ok=True)
 
-            wav = torchaudio.load(os.path.join(train_config.test_audio_path, f"audio_1.wav"))[0][0]
-            mel = melspec(wav).to(device)
+            wav = torchaudio.load(os.path.join(train_config.test_audio_path, f"audio_1.wav"))[0][0].to(device)
+            mel = melspec(wav)
             fake_wav = generator(mel)
             fake_mel = melspec(fake_wav)
-            test_audios[len(test_audios.keys())] = {"cur_step": cur_step,
-                                                    "real_wav": wav, "generated_wav": fake_wav,
-                                                    "real_mel": mel, "generated_mel": fake_mel}
-
-            logger.add_table(test_audios)
+            new_id = len(test_audios_dir.keys())
+            torchaudio.save(
+                f"{train_config.checkpoint_audio_path}/audio_step_{cur_step}.wav",
+                fake_wav.cpu(), melspec_config.sr
+            )
+            wav = logger.wandb.Audio(os.path.join(train_config.test_audio_path, f"audio_1.wav"), sample_rate=melspec_config.sr)
+            fake_wav = logger.wandb.Audio(f"{train_config.checkpoint_audio_path}/audio_step_{cur_step}.wav", sample_rate=melspec_config.sr)
+            test_audios_dir[new_id] = {"cur_step": cur_step, "real_wav": wav,
+                                       "generated_wav": fake_wav}
+            logger.add_table(test_audios_dir)
             logger.add_scalar('melspec_error', err)
 
-            save_checkpoint(f"{train_config.checkpoint_path}/checkpoint_{cur_step}")
+            if not os.path.exists(train_config.checkpoint_path):
+                os.makedirs(train_config.checkpoint_path, exist_ok=True)
+
+            torch.save(
+                {
+                    'generator': generator.state_dict(),
+                    'mpd': mpd.state_dict(),
+                    'msd': msd.state_dict(),
+                    'd_optimizer': d_optimizer.state_dict(),
+                    'g_optimizer': g_optimizer.state_dict()
+                },
+                os.path.join(train_config.checkpoint_path, 'checkpoint_%d.pth.tar' % cur_step))
+            print("save generator at step %d ..." % cur_step)
 
     g_scheduler.step()
     d_scheduler.step()

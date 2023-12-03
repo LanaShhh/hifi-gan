@@ -37,7 +37,7 @@ class TrainConfig:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     last_epoch = -1
-    save_step = 10
+    save_step = 100
     epochs = 30
 
     # from original model config
