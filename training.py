@@ -171,7 +171,7 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
             fake_mel = melspec(fake_wav)
             new_id = len(test_audios_dir.keys())
             torchaudio.save(
-                f"{train_config.checkpoint_audio_path}/audio_step_{cur_step}.wav",
+                f"{train_config.checkpoint_audio_path}/audio.wav",
                 fake_wav.cpu(), melspec_config.sr
             )
             wav = logger.wandb.Audio(os.path.join(train_config.test_audio_path, f"audio_1.wav"), sample_rate=melspec_config.sr)
