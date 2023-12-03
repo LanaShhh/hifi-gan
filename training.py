@@ -145,7 +145,6 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
         logger.add_scalar('generator_loss', loss_all)
 
         if cur_step > 0 and cur_step % train_config.save_step == 0:
-            logger.set_step(cur_step, 'test')
             generator.eval()
             mpd.eval()
             msd.eval()
@@ -180,20 +179,21 @@ for epoch in range(train_config.last_epoch + 1, train_config.epochs):
             test_audios_dir[new_id] = {"cur_step": cur_step, "real_wav": wav,
                                        "generated_wav": fake_wav}
             logger.add_table(test_audios_dir)
-            logger.add_scalar('melspec_error', err)
+            logger.add_scalar('test_melspec_error', err)
 
             if not os.path.exists(train_config.checkpoint_path):
                 os.makedirs(train_config.checkpoint_path, exist_ok=True)
 
             torch.save(
                 {
+                    'step': cur_step,
                     'generator': generator.state_dict(),
                     'mpd': mpd.state_dict(),
                     'msd': msd.state_dict(),
                     'd_optimizer': d_optimizer.state_dict(),
                     'g_optimizer': g_optimizer.state_dict()
                 },
-                os.path.join(train_config.checkpoint_path, 'checkpoint_%d.pth.tar' % cur_step))
+                os.path.join(train_config.checkpoint_path, 'checkpoint.pth.tar'))
             print("save generator at step %d ..." % cur_step)
 
     g_scheduler.step()
