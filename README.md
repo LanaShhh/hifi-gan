@@ -38,7 +38,7 @@ python3 inference.py model_state_dict_path
 
 model_state_path - обязательный параметр, путь до модели. 
 
-Итоговый чекпоинт модели автора - TBD ссылка.
+Итоговый чекпоинт модели автора - https://disk.yandex.ru/d/P9DwPSop7o1mGw.
 
 Для тестирования чекпоинта выше необходимо скачать файл и положить его в папку checkpoints: "./checkpoints.checkpoint.pth.tar"
 
